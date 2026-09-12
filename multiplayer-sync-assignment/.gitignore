@@ -1,9 +1,17 @@
 # Dependencies
+node_modules
 node_modules/
+*/node_modules
+*/node_modules/
+**/node_modules
 **/node_modules/
 
 # Production build outputs
+dist
 dist/
+*/dist
+*/dist/
+**/dist
 **/dist/
 
 # Logs
@@ -12,7 +20,7 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# Environment & local settings
+# OS / Environment
 .env
 .env.local
 .DS_Store
