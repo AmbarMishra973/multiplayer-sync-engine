@@ -363,7 +363,7 @@ export default function App() {
           </div>
           <h1 className="card-title">Live Interactive Arena</h1>
           <p className="card-subtitle">
-            Move your cursor, tap reactions, and hype the broadcast together in real-time.
+            Interact with the broadcast and other viewers in real time.
           </p>
 
           <button onClick={handleHypeTap} className="hype-button">
@@ -372,12 +372,12 @@ export default function App() {
             <span className="hype-counter-badge">{hypeTotal.toLocaleString()}</span>
           </button>
           <div className="card-caption">
-            ⚡ Simultaneous taps reconciled server-authoritatively across all peers
+            Global live count
           </div>
         </div>
 
         <div className="hint-pill">
-          💡 Open this URL in <strong>2 to 4 browser tabs</strong> to see remote cursors glide with zero lag!
+          💡 Open this URL in multiple tabs to test live sync.
         </div>
       </main>
 
