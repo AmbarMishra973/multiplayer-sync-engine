@@ -485,7 +485,7 @@ export function createMultiplayerServer() {
 
     connection.onClose(() => {
       if (connection.clientId) {
-        roomManager.unregisterClient(connection.clientId);
+        roomManager.unregisterClient(connection.clientId, connection);
       }
     });
   });

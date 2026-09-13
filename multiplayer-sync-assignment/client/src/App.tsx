@@ -44,17 +44,13 @@ const PRESET_COLORS = [
   '#f97316',
 ];
 
-function getOrCreateClientId(): string {
-  let id = sessionStorage.getItem('fan_sync_client_id');
-  if (!id) {
-    id = 'user_' + Math.random().toString(36).substring(2, 9);
-    sessionStorage.setItem('fan_sync_client_id', id);
-  }
-  return id;
+function generateUniqueTabClientId(): string {
+  // Always unique per tab instance (never duplicate across cloned or duplicated tabs)
+  return 'user_' + Math.random().toString(36).substring(2, 9) + '_' + Date.now().toString(36).slice(-4);
 }
 
 export default function App() {
-  const [clientId] = useState(getOrCreateClientId);
+  const [clientId] = useState(generateUniqueTabClientId);
   const [name, setName] = useState(() => 'Fan-' + clientId.slice(-4).toUpperCase());
   const [color, setColor] = useState(() => {
     const idx = Math.floor(Math.random() * PRESET_COLORS.length);
@@ -66,6 +62,7 @@ export default function App() {
   const [hypeTotal, setHypeTotal] = useState(128);
   const [selectedEmoji, setSelectedEmoji] = useState('🔥');
   const [activePeers, setActivePeers] = useState<RemotePeerState[]>([]);
+  const [toasts, setToasts] = useState<Array<{ id: string; message: string; color: string }>>([]);
   const [metrics, setMetrics] = useState<ClientMetrics>({
     rttMs: 0,
     jitterMs: 0,
@@ -74,6 +71,14 @@ export default function App() {
     remoteUpdatesPerSec: 0,
     connected: false,
   });
+
+  const addToast = useCallback((message: string, toastColor = '#818cf8') => {
+    const id = Math.random().toString(36).substring(2, 9);
+    setToasts((prev) => [...prev.slice(-2), { id, message, color: toastColor }]);
+    setTimeout(() => {
+      setToasts((prev) => prev.filter((t) => t.id !== id));
+    }, 3800);
+  }, []);
 
   // Diagnostics & Simulation
   const [interpMode, setInterpMode] = useState<InterpolationMode>('extrapolation');
@@ -160,14 +165,26 @@ export default function App() {
 
     const unsubJoin = room.onPeerJoin((client) => {
       setActivePeers((prev) => {
-        if (prev.some((p) => p.clientId === client.clientId)) return prev;
+        const index = prev.findIndex((p) => p.clientId === client.clientId);
+        if (index >= 0) {
+          const updated = [...prev];
+          updated[index] = client;
+          return updated;
+        }
         return [...prev, client];
       });
       interp.getOrCreatePeer(client.clientId, client.name, client.color);
+      addToast(`🎉 ${client.name} joined the stage`, client.color);
     });
 
     const unsubLeave = room.onPeerLeave((leftClientId) => {
-      setActivePeers((prev) => prev.filter((p) => p.clientId !== leftClientId));
+      setActivePeers((prev) => {
+        const leaving = prev.find((p) => p.clientId === leftClientId);
+        if (leaving) {
+          addToast(`👋 ${leaving.name} left`, leaving.color);
+        }
+        return prev.filter((p) => p.clientId !== leftClientId);
+      });
       interp.removePeer(leftClientId);
     });
 
@@ -353,6 +370,20 @@ export default function App() {
           </div>
         </div>
       </header>
+
+      {/* Live Presence Toast Notifications */}
+      <div className="toast-container">
+        {toasts.map((toast) => (
+          <div
+            key={toast.id}
+            className="toast-item"
+            style={{ borderColor: toast.color }}
+          >
+            <div className="toast-dot" style={{ backgroundColor: toast.color }} />
+            <span>{toast.message}</span>
+          </div>
+        ))}
+      </div>
 
       {/* Center Broadcast Card */}
       <main className="stage-center">

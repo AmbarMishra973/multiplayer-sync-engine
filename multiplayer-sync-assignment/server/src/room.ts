@@ -103,19 +103,17 @@ export class Room {
     socket.sendText(JSON.stringify(roomStateMsg));
 
     // 2. Broadcast presence join to all other participants
-    if (!isReconnect) {
-      const joinMsg: ServerMessage = {
-        type: "client_joined",
-        client: {
-          clientId: peer.clientId,
-          name: peer.name,
-          color: peer.color,
-          cursor: peer.cursor,
-          lastSeenTs: peer.lastSeenTs,
-        },
-      };
-      this.broadcast(joinMsg, clientId);
-    }
+    const joinMsg: ServerMessage = {
+      type: "client_joined",
+      client: {
+        clientId: peer.clientId,
+        name: peer.name,
+        color: peer.color,
+        cursor: peer.cursor,
+        lastSeenTs: peer.lastSeenTs,
+      },
+    };
+    this.broadcast(joinMsg, clientId);
   }
 
   /**
@@ -270,12 +268,17 @@ export class RoomManager {
     return this.rooms.get(roomId);
   }
 
-  unregisterClient(clientId: string): void {
+  unregisterClient(clientId: string, socket?: ConnectedSocket): void {
     const roomId = this.clientToRoom.get(clientId);
     if (roomId) {
-      this.clientToRoom.delete(clientId);
       const room = this.rooms.get(roomId);
       if (room) {
+        const peer = room.getPeer(clientId);
+        // If socket is provided and does not match the active peer's socket, ignore old close event
+        if (peer && socket && peer.socket !== socket) {
+          return;
+        }
+        this.clientToRoom.delete(clientId);
         room.leave(clientId, "disconnect");
         if (room.peerCount === 0) {
           this.rooms.delete(roomId);
