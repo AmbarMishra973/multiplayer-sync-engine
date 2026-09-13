@@ -6,6 +6,8 @@
 
 import http from "node:http";
 import crypto from "node:crypto";
+import fs from "node:fs";
+import path from "node:path";
 import { Duplex } from "node:stream";
 import { RoomManager, ConnectedSocket } from "./room.js";
 import {
@@ -253,6 +255,64 @@ export class RawWebSocketConnection implements ConnectedSocket {
 // HTTP & Upgrade Server Setup
 // ==========================================
 
+const MIME_TYPES: Record<string, string> = {
+  ".html": "text/html; charset=utf-8",
+  ".js": "application/javascript; charset=utf-8",
+  ".css": "text/css; charset=utf-8",
+  ".json": "application/json",
+  ".svg": "image/svg+xml",
+  ".png": "image/png",
+  ".jpg": "image/jpeg",
+  ".ico": "image/x-icon",
+};
+
+function tryServeStatic(req: http.IncomingMessage, res: http.ServerResponse): boolean {
+  const possiblePaths = [
+    path.resolve(process.cwd(), "client/dist"),
+    path.resolve(process.cwd(), "../client/dist"),
+    path.resolve(process.cwd(), "dist"),
+  ];
+
+  let distDir: string | null = null;
+  for (const p of possiblePaths) {
+    if (fs.existsSync(p) && fs.statSync(p).isDirectory()) {
+      distDir = p;
+      break;
+    }
+  }
+
+  if (!distDir) return false;
+
+  const urlPath = (req.url || "/").split("?")[0];
+  let filePath = path.join(distDir, urlPath === "/" ? "index.html" : urlPath);
+
+  if (!filePath.startsWith(distDir)) {
+    res.writeHead(403);
+    res.end("Forbidden");
+    return true;
+  }
+
+  if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
+    const ext = path.extname(filePath).toLowerCase();
+    const contentType = MIME_TYPES[ext] || "application/octet-stream";
+    res.writeHead(200, { "Content-Type": contentType });
+    fs.createReadStream(filePath).pipe(res);
+    return true;
+  }
+
+  // SPA Fallback: if no extension, serve index.html
+  if (!path.extname(urlPath)) {
+    const indexPath = path.join(distDir, "index.html");
+    if (fs.existsSync(indexPath)) {
+      res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
+      fs.createReadStream(indexPath).pipe(res);
+      return true;
+    }
+  }
+
+  return false;
+}
+
 export function createMultiplayerServer() {
   const roomManager = new RoomManager();
 
@@ -285,6 +345,10 @@ export function createMultiplayerServer() {
           timestamp: Date.now(),
         })
       );
+      return;
+    }
+
+    if (tryServeStatic(req, res)) {
       return;
     }
 

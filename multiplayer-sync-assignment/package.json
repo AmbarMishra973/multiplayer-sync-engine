@@ -3,14 +3,16 @@
   "version": "1.0.0",
   "description": "Zero-dependency RFC-6455 WebSocket multiplayer cursor and state sync engine",
   "scripts": {
+    "install:all": "npm --prefix server install && npm --prefix client install",
     "dev:server": "npm --prefix server run dev",
     "dev:client": "npm --prefix client run dev",
     "build:server": "npm --prefix server run build",
     "build:client": "npm --prefix client run build",
-    "build": "npm run build:server && npm run build:client",
+    "build": "npm run build:client && npm run build:server",
     "test:server": "npm --prefix server test",
     "test": "npm run test:server",
     "start:server": "npm --prefix server start",
+    "start": "node server/dist/server.js",
     "preview:client": "npm --prefix client run preview"
   },
   "keywords": ["websocket", "realtime", "cursor-sync", "interpolation", "rfc6455"],

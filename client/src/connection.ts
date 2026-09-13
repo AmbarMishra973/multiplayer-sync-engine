@@ -51,12 +51,20 @@ export interface RoomHandle {
 }
 
 export function createRoom(options: RoomOptions): RoomHandle {
+  const protocol = typeof window !== "undefined" && window.location.protocol === "https:" ? "wss:" : "ws:";
+  const defaultWsUrl =
+    typeof window !== "undefined" && window.location.port === "5173"
+      ? `ws://${window.location.hostname}:8080`
+      : typeof window !== "undefined"
+      ? `${protocol}//${window.location.host}`
+      : "ws://localhost:8080";
+
   const {
     roomId,
     clientId,
     name = `Viewer-${clientId.slice(0, 4)}`,
     color = "#3b82f6",
-    wsUrl = `ws://${window.location.hostname}:8080`,
+    wsUrl = defaultWsUrl,
     throttleIntervalMs = 30,
   } = options;
 
