@@ -53,30 +53,6 @@ Designed for interactive live broadcast experiences (e.g., fan-moment widgets du
 
 ---
 
-## ☁️ Deploying on Render (Render.com)
-
-This application is architected for single-click, zero-config deployment on Render as a unified Node.js Web Service (serving both the React single-page application and the native RFC-6455 WebSocket engine on a single port with automatic HTTPS/WSS encryption).
-
-### Option A: Render Blueprint (Automatic One-Click)
-1. Fork or push this repository to GitHub: `https://github.com/AmbarMishra973/multiplayer-sync-engine.git`.
-2. Go to your [Render Dashboard](https://dashboard.render.com/) and click **New +** -> **Blueprint**.
-3. Connect your GitHub repository. Render will automatically detect `render.yaml` and configure the Web Service with the following defaults:
-   - **Build Command**: `npm run install:all && npm run build`
-   - **Start Command**: `npm start`
-   - **Health Check Path**: `/health`
-4. Click **Apply**. Render will deploy the application and give you a live URL (e.g., `https://multiplayer-sync-engine.onrender.com`).
-
-### Option B: Manual Web Service Setup
-1. On your Render Dashboard, click **New +** -> **Web Service**.
-2. Connect `https://github.com/AmbarMishra973/multiplayer-sync-engine.git`.
-3. Select **Node** as the Environment.
-4. Set **Build Command**: `npm run install:all && npm run build`
-5. Set **Start Command**: `npm start`
-6. Set **Health Check Path**: `/health`
-7. Click **Create Web Service**. Once deployed, open the live Render URL in multiple tabs or devices to test live multi-user cursor sync!
-
----
-
 ## 📡 Protocol Design
 
 ### Wire Format & Transport
